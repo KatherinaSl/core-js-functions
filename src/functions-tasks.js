@@ -178,28 +178,42 @@ function retry(func, attempts) {
  * cos(3.141592653589793) ends
  *
  */
+function elementToString(element) {
+  if (typeof element === 'string') {
+    return `"${element}"`;
+  }
+  return `${element}`;
+}
+
+function reduceArrToSting(arr) {
+  return `[${arr.reduce(
+    (acc, element, index) =>
+      index === 0
+        ? `${elementToString(element)}`
+        : `${acc},${elementToString(element)}`,
+    ''
+  )}]`;
+}
+
 function logger(func, logFunc) {
-  // throw new Error('Not implemented');
   return function wrapper(...args) {
     const funcName = func.name;
-    let result;
-    if (args.length > 1) {
-      const resultStr = args[0].map((el) => {
-        if (typeof el === 'string') {
-          return `"${el}"`;
-        }
-        return el;
-      });
+    const argsStr = args.reduce((acc, element, index) => {
+      let result = acc;
+      if (index !== 0) {
+        result += `,`;
+      }
+      if (typeof element === 'object') {
+        result += reduceArrToSting(element);
+      } else {
+        result += `${elementToString(element)}`;
+      }
+      return result;
+    }, '');
 
-      logFunc(`${funcName}([${resultStr}],${args[1]}) starts`);
-
-      result = func(...args);
-      logFunc(`${funcName}([${resultStr}],${args[1]}) ends`);
-    } else {
-      logFunc(`${funcName}(${args}) starts`);
-      result = func(...args);
-      logFunc(`${funcName}(${args}) ends`);
-    }
+    logFunc(`${funcName}(${argsStr}) starts`);
+    const result = func(...args);
+    logFunc(`${funcName}(${argsStr}) ends`);
 
     return result;
   };
